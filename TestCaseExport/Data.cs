@@ -37,10 +37,11 @@ namespace TestCaseExport
         }
 
         private ITestManagementTeamProject _selectedProject;
-        private BindingList<ITestPlan> _testPlans = new BindingList<ITestPlan>();
-        private ITestPlan _selectedTestPlan;
+        private BindingList<SelectableTestPlan> _testPlans = new BindingList<SelectableTestPlan>();
+        private SelectableTestPlan _selectedTestPlan;
         private BindingList<SelectableTestSuite> _testSuites = new BindingList<SelectableTestSuite>();
         private SelectableTestSuite _selectedTestSuite;
+        private bool _allTestSuites;
         private string _exportFileName;
 
         public ITestManagementTeamProject SelectedProject
@@ -62,7 +63,7 @@ namespace TestCaseExport
                         data =>
                         {
                             TestPlans.Clear();
-                            data.Result.ForEach(TestPlans.Add);
+                            data.Result.ForEach(p => TestPlans.Add(new SelectableTestPlan(p)));
                             SelectedTestPlan = TestPlans.FirstOrDefault();
                             _pendingTasks.Remove(task);
                             OnIsBusy(false);
@@ -81,12 +82,12 @@ namespace TestCaseExport
             get { return _selectedProject == null ? "" : _selectedProject.TeamProjectName; }
         }
 
-        public BindingList<ITestPlan> TestPlans
+        public BindingList<SelectableTestPlan> TestPlans
         {
             get { return _testPlans; }
         }
 
-        public ITestPlan SelectedTestPlan
+        public SelectableTestPlan SelectedTestPlan
         {
             get { return _selectedTestPlan; }
             set
@@ -95,12 +96,14 @@ namespace TestCaseExport
                 _selectedTestPlan = value;
                 OnPropertyChanged();
 
+                ExportFileName = string.Empty;
+
                 // reload the list of test suites (on background thread)
                 if (null != _selectedTestPlan)
                 {
                     OnIsBusy(true);
                     Task task = null;
-                    task = Task.Run(() => _selectedTestPlan.RootSuite.Entries.Where(i => i.TestSuite != null).Select(i => new SelectableTestSuite(i.TestSuite)).ToList()).ContinueWith(
+                    task = Task.Run(() => _selectedTestPlan.TestPlan.RootSuite.Entries.Where(i => i.TestSuite != null).Select(i => new SelectableTestSuite(i.TestSuite)).ToList()).ContinueWith(
                         data =>
                         {
                             TestSuites.Clear();
@@ -135,6 +138,18 @@ namespace TestCaseExport
             }
         }
 
+        public bool AllTestSuites
+        {
+            get { return _allTestSuites; }
+            set
+            {
+                if (value == _allTestSuites) return;
+                _allTestSuites = value;
+                OnPropertyChanged();
+                OnPropertyChanged("AllSuitesSelected");
+            }
+        }
+
         public string ExportFileName
         {
             get { return _exportFileName; }
@@ -158,6 +173,7 @@ namespace TestCaseExport
             settings.ProjectName = SelectedProject.TeamProjectName;
             settings.TestPlan = SelectedTestPlan.Name;
             settings.TestSuite = SelectedTestSuite.Title;
+            settings.AllTestSuites = AllTestSuites;
             settings.ExportFilename = ExportFileName;
             settings.Save();
         }
@@ -184,18 +200,35 @@ namespace TestCaseExport
                 return;
 
             SelectedTestSuite = TestSuites.SingleOrDefault(i => i.Title == settings.TestSuite);
+            AllTestSuites = settings.AllTestSuites;
             ExportFileName = settings.ExportFilename;
+        }
+
+        public class SelectableTestPlan
+        {
+            public ITestPlan TestPlan { get; private set; }
+            public string Name { get; private set; }
+            public string DisplayName { get; private set; }
+
+            public SelectableTestPlan(ITestPlan testPlan)
+            {
+                TestPlan = testPlan;
+                Name = testPlan.Name;
+                DisplayName = testPlan.Name + " (Id: " + testPlan.Id.ToString() + ")";
+            }
         }
 
         public class SelectableTestSuite
         {
             public ITestSuiteBase TestSuite { get; private set; }
             public string Title { get; private set; }
+            public string DisplayName { get; private set; }
 
             public SelectableTestSuite(ITestSuiteBase testSuite)
             {
                 TestSuite = testSuite;
                 Title = testSuite.Title;
+                DisplayName = testSuite.Title + " (Id: " + testSuite.Id.ToString() + ")";
             }
         }
     }

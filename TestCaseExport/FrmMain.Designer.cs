@@ -32,9 +32,10 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.allTestSuitesCheckBox = new System.Windows.Forms.CheckBox();
             this.comBoxTestSuite = new System.Windows.Forms.ComboBox();
-            this.bsData = new System.Windows.Forms.BindingSource(this.components);
             this.testSuitesBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.bsData = new System.Windows.Forms.BindingSource(this.components);
             this.lblTestSuite = new System.Windows.Forms.Label();
             this.comBoxTestPlan = new System.Windows.Forms.ComboBox();
             this.testPlansBindingSource = new System.Windows.Forms.BindingSource(this.components);
@@ -52,10 +53,11 @@
             this.lblWelcomeMessage = new System.Windows.Forms.Label();
             this.btnAbout = new System.Windows.Forms.Button();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.singleFileCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.bsData)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.testSuitesBindingSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsData)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.testPlansBindingSource)).BeginInit();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -68,12 +70,13 @@
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
             this.pictureBox1.Location = new System.Drawing.Point(10, 12);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(235, 495);
+            this.pictureBox1.Size = new System.Drawing.Size(235, 529);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.allTestSuitesCheckBox);
             this.groupBox1.Controls.Add(this.comBoxTestSuite);
             this.groupBox1.Controls.Add(this.lblTestSuite);
             this.groupBox1.Controls.Add(this.comBoxTestPlan);
@@ -89,11 +92,21 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Source";
             // 
+            // allTestSuitesCheckBox
+            // 
+            this.allTestSuitesCheckBox.AutoSize = true;
+            this.allTestSuitesCheckBox.Font = new System.Drawing.Font("Calibri", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.allTestSuitesCheckBox.Location = new System.Drawing.Point(475, 158);
+            this.allTestSuitesCheckBox.Name = "allTestSuitesCheckBox";
+            this.allTestSuitesCheckBox.Size = new System.Drawing.Size(44, 22);
+            this.allTestSuitesCheckBox.TabIndex = 4;
+            this.allTestSuitesCheckBox.Text = "All";
+            this.allTestSuitesCheckBox.UseVisualStyleBackColor = true;
+            // 
             // comBoxTestSuite
             // 
             this.comBoxTestSuite.DataSource = this.testSuitesBindingSource;
-            this.comBoxTestSuite.DisplayMember = "Title";
-            this.comBoxTestSuite.ValueMember = "Title";
+            this.comBoxTestSuite.DisplayMember = "DisplayName";
             this.comBoxTestSuite.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comBoxTestSuite.Font = new System.Drawing.Font("Calibri", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comBoxTestSuite.FormattingEnabled = true;
@@ -101,16 +114,17 @@
             this.comBoxTestSuite.Name = "comBoxTestSuite";
             this.comBoxTestSuite.Size = new System.Drawing.Size(452, 23);
             this.comBoxTestSuite.TabIndex = 3;
-            // 
-            // bsData
-            // 
-            this.bsData.AllowNew = false;
-            this.bsData.DataSource = typeof(TestCaseExport.Data);
+            this.comBoxTestSuite.ValueMember = "Title";
             // 
             // testSuitesBindingSource
             // 
             this.testSuitesBindingSource.DataMember = "TestSuites";
             this.testSuitesBindingSource.DataSource = this.bsData;
+            // 
+            // bsData
+            // 
+            this.bsData.AllowNew = false;
+            this.bsData.DataSource = typeof(TestCaseExport.Data);
             // 
             // lblTestSuite
             // 
@@ -125,8 +139,7 @@
             // comBoxTestPlan
             // 
             this.comBoxTestPlan.DataSource = this.testPlansBindingSource;
-            this.comBoxTestPlan.DisplayMember = "Name";
-            this.comBoxTestPlan.ValueMember = "Name";
+            this.comBoxTestPlan.DisplayMember = "DisplayName";
             this.comBoxTestPlan.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comBoxTestPlan.Font = new System.Drawing.Font("Calibri", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comBoxTestPlan.FormattingEnabled = true;
@@ -134,6 +147,7 @@
             this.comBoxTestPlan.Name = "comBoxTestPlan";
             this.comBoxTestPlan.Size = new System.Drawing.Size(452, 23);
             this.comBoxTestPlan.TabIndex = 2;
+            this.comBoxTestPlan.ValueMember = "Name";
             // 
             // testPlansBindingSource
             // 
@@ -182,13 +196,14 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.singleFileCheckBox);
             this.groupBox2.Controls.Add(this.btnFolderBrowse);
             this.groupBox2.Controls.Add(this.txtSaveFile);
             this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Font = new System.Drawing.Font("Calibri", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(260, 374);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(529, 82);
+            this.groupBox2.Size = new System.Drawing.Size(529, 118);
             this.groupBox2.TabIndex = 0;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Destination";
@@ -229,7 +244,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Calibri", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCancel.Location = new System.Drawing.Point(707, 482);
+            this.btnCancel.Location = new System.Drawing.Point(707, 516);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(82, 25);
             this.btnCancel.TabIndex = 7;
@@ -242,7 +257,7 @@
             this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnExport.DataBindings.Add(new System.Windows.Forms.Binding("Enabled", this.bsData, "SuiteIsSelected", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.btnExport.Font = new System.Drawing.Font("Calibri", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExport.Location = new System.Drawing.Point(617, 482);
+            this.btnExport.Location = new System.Drawing.Point(617, 516);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(82, 25);
             this.btnExport.TabIndex = 6;
@@ -275,7 +290,7 @@
             // 
             this.btnAbout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnAbout.Font = new System.Drawing.Font("Calibri", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAbout.Location = new System.Drawing.Point(260, 482);
+            this.btnAbout.Location = new System.Drawing.Point(260, 516);
             this.btnAbout.Name = "btnAbout";
             this.btnAbout.Size = new System.Drawing.Size(82, 25);
             this.btnAbout.TabIndex = 8;
@@ -289,6 +304,17 @@
             this.saveFileDialog.Filter = "Excel files|*.xlsx";
             this.saveFileDialog.SupportMultiDottedExtensions = true;
             // 
+            // singleFileCheckBox
+            // 
+            this.singleFileCheckBox.AutoSize = true;
+            this.singleFileCheckBox.Font = new System.Drawing.Font("Calibri", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.singleFileCheckBox.Location = new System.Drawing.Point(11, 72);
+            this.singleFileCheckBox.Name = "singleFileCheckBox";
+            this.singleFileCheckBox.Size = new System.Drawing.Size(163, 22);
+            this.singleFileCheckBox.TabIndex = 8;
+            this.singleFileCheckBox.Text = "One file per Test Suite";
+            this.singleFileCheckBox.UseVisualStyleBackColor = true;
+            // 
             // FrmMain
             // 
             this.AcceptButton = this.btnExport;
@@ -296,7 +322,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(801, 518);
+            this.ClientSize = new System.Drawing.Size(801, 552);
             this.Controls.Add(this.btnAbout);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.btnExport);
@@ -314,8 +340,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.bsData)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.testSuitesBindingSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsData)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.testPlansBindingSource)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
@@ -349,6 +375,8 @@
         private System.Windows.Forms.BindingSource testPlansBindingSource;
         private System.Windows.Forms.BindingSource testSuitesBindingSource;
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
+        private System.Windows.Forms.CheckBox allTestSuitesCheckBox;
+        private System.Windows.Forms.CheckBox singleFileCheckBox;
     }
 }
 

@@ -13,7 +13,7 @@ namespace TestCaseExport
     public partial class FrmMain : Form
     {
         private Data _data = new Data();
-        
+
         private delegate void Execute();
 
         public FrmMain()
@@ -48,15 +48,23 @@ namespace TestCaseExport
                 {
                     this.comBoxTestSuite.SelectedItem = _data.SelectedTestSuite;
                 }
+                if (args.PropertyName == "AllTestSuites")
+                {
+                    this.allTestSuitesCheckBox.Checked = _data.AllTestSuites;
+                }
             };
 
             this.comBoxTestPlan.SelectedIndexChanged += (sender, args) =>
             {
-                _data.SelectedTestPlan = this.comBoxTestPlan.SelectedItem as ITestPlan;
+                _data.SelectedTestPlan = this.comBoxTestPlan.SelectedItem as Data.SelectableTestPlan;
             };
             this.comBoxTestSuite.SelectedIndexChanged += (sender, args) =>
             {
                 _data.SelectedTestSuite = this.comBoxTestSuite.SelectedItem as Data.SelectableTestSuite;
+            };
+            this.allTestSuitesCheckBox.CheckedChanged += (sender, args) =>
+            {
+                _data.AllTestSuites = this.allTestSuitesCheckBox.Checked;
             };
         }
 
@@ -66,7 +74,7 @@ namespace TestCaseExport
             var tpp = new TeamProjectPicker(TeamProjectPickerMode.SingleProject, false);
             tpp.ShowDialog();
 
-            //Following actions will be executed only if a team project is selected in the the opened dialog.
+            //Following actions will be executed only if a team project is selected in the opened dialog.
             if (tpp.SelectedTeamProjectCollection != null)
             {
                 var tfs = tpp.SelectedTeamProjectCollection;
@@ -79,6 +87,9 @@ namespace TestCaseExport
 
         private void btnFolderBrowse_Click(object sender, EventArgs e)
         {
+            // propose the selected object
+            saveFileDialog.FileName = _data.AllTestSuites ?
+                _data.SelectedTestPlan.DisplayName : _data.SelectedTestSuite.DisplayName;
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 _data.ExportFileName = saveFileDialog.FileName;
@@ -92,11 +103,24 @@ namespace TestCaseExport
 
             try
             {
-                var filename = _data.ExportFileName;
-                new Exporter().Export(filename, _data.SelectedTestSuite.TestSuite);
-                Process.Start(filename);
-
                 _data.SaveSettings(Settings.Default);
+                Settings.Default.Save();
+
+                var filename = _data.ExportFileName;
+                var exporter = new Exporter();
+                if (_data.AllTestSuites)
+                {
+                    exporter.Export(filename, _data.TestSuites, this.singleFileCheckBox.Checked);
+                    if (this.singleFileCheckBox.Checked)
+                    {
+                        Process.Start(filename);
+                    }
+                }
+                else
+                {
+                    exporter.Export(filename, _data.SelectedTestSuite);
+                    Process.Start(filename);
+                }
 
                 this.Cursor = Cursors.Default;
                 this.Enabled = true;

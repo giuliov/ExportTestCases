@@ -6,6 +6,8 @@ using System.Linq;
 using Microsoft.TeamFoundation.TestManagement.Client;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System;
+using System.Windows.Forms;
 
 namespace TestCaseExport
 {
@@ -14,67 +16,131 @@ namespace TestCaseExport
     /// </summary>
     public class Exporter
     {
-        public void Export(string filename, ITestSuiteBase testSuite)
+
+        public void Export(string filename, IEnumerable<Data.SelectableTestSuite> testSuites, bool individualFiles)
         {
-            using (var pkg = new ExcelPackage())
+            if (individualFiles)
             {
-                var sheet = pkg.Workbook.Worksheets.Add("Test Script");
-                sheet.Cells[1, 1].Value = "Work Item ID";
-                sheet.Cells[1, 2].Value = "Test Condition";
-                sheet.Cells[1, 3].Value = "Action/Description";
-                sheet.Cells[1, 4].Value = "Input Data";
-                sheet.Cells[1, 5].Value = "Expected Result";
-                sheet.Cells[1, 6].Value = "Actual Result";
-                sheet.Cells[1, 7].Value = "Pass/Fail";
-                sheet.Cells[1, 8].Value = "Comments";
-
-                sheet.Column(1).Width = 15;
-                sheet.Column(2).Width = 15;
-                sheet.Column(3).Width = 50;
-                sheet.Column(4).Width = 15;
-                sheet.Column(5).Width = 50;
-                sheet.Column(6).Width = 50;
-                sheet.Column(7).Width = 15;
-                sheet.Column(8).Width = 20;
-
-
-                int row = 2;
-                foreach (var testCase in testSuite.AllTestCases)
+                foreach (var testSuite in testSuites)
                 {
-                    var replacementSets = GetReplacementSets(testCase);
-                    foreach (var replacements in replacementSets)
+                    var singleFilename =
+                        Path.Combine(
+                            Path.GetDirectoryName(filename),
+                            Path.ChangeExtension(
+                                Printable(testSuite.DisplayName),
+                                Path.GetExtension(filename)
+                        ));
+                    var fi = new FileInfo(singleFilename);
+                    using (var pkg = new ExcelPackage(fi))
                     {
-                        var firstRow = row;
-                        foreach (var testAction in testCase.Actions)
+                        using (var sheet = pkg.Workbook.Worksheets.Add(testSuite.DisplayName))
                         {
-                            AddSteps(sheet, testAction, replacements, ref row);
-                        }
-                        if (firstRow != row)
-                        {
-                            var mergedID = sheet.Cells[firstRow, 1, row - 1, 1];
-                            mergedID.Merge = true;
-                            mergedID.Value = testCase.WorkItem == null ? "" : testCase.WorkItem.Id.ToString();
-                            mergedID.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                            mergedID.Style.VerticalAlignment = ExcelVerticalAlignment.Top;
-
-                            var mergedText = sheet.Cells[firstRow, 2, row - 1, 2];
-                            mergedText.Merge = true;
-                            CleanupText(mergedText, testCase.Title, replacements);
-                            mergedText.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                            mergedText.Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+                            try
+                            {
+                                ExportTestSuiteToWorksheet(testSuite, sheet);
+                                pkg.Save();
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show("Failed to export Test Suite '" + testSuite.DisplayName + "'" + Environment.NewLine + ex, "Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
                         }
                     }
                 }
-
-                var header = sheet.Cells[1, 1, 1, 8];
-                header.Style.Font.Bold = true;
-                header.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                header.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 226, 238, 18));
-
-                sheet.Cells[1, 1, row, 8].Style.WrapText = true;
-
-                pkg.SaveAs(new FileInfo(filename));
             }
+            else
+            {
+                var fi = new FileInfo(filename);
+                using (var pkg = new ExcelPackage(fi))
+                {
+                    foreach (var testSuite in testSuites)
+                    {
+                        var sheet = pkg.Workbook.Worksheets.Add(testSuite.DisplayName);
+                        ExportTestSuiteToWorksheet(testSuite, sheet);
+                    }
+                    pkg.Save();
+                }
+            }
+        }
+
+        private string Printable(string p)
+        {
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                p = p.Replace(c, '_');
+
+            }
+            return p;
+        }
+
+        public void Export(string filename, Data.SelectableTestSuite testSuite)
+        {
+            var fi = new FileInfo(filename);
+            using (var pkg = new ExcelPackage(fi))
+            {
+                using (var sheet = pkg.Workbook.Worksheets.Add(testSuite.DisplayName))
+                {
+                    ExportTestSuiteToWorksheet(testSuite, sheet);
+                    pkg.Save();
+                }
+            }
+        }
+
+        private void ExportTestSuiteToWorksheet(Data.SelectableTestSuite testSuite, ExcelWorksheet sheet)
+        {
+            sheet.Cells[1, 1].Value = "Work Item ID";
+            sheet.Cells[1, 2].Value = "Test Condition";
+            sheet.Cells[1, 3].Value = "Action/Description";
+            sheet.Cells[1, 4].Value = "Input Data";
+            sheet.Cells[1, 5].Value = "Expected Result";
+            sheet.Cells[1, 6].Value = "Actual Result";
+            sheet.Cells[1, 7].Value = "Pass/Fail";
+            sheet.Cells[1, 8].Value = "Comments";
+
+            sheet.Column(1).Width = 15;
+            sheet.Column(2).Width = 15;
+            sheet.Column(3).Width = 50;
+            sheet.Column(4).Width = 15;
+            sheet.Column(5).Width = 50;
+            sheet.Column(6).Width = 50;
+            sheet.Column(7).Width = 15;
+            sheet.Column(8).Width = 20;
+
+
+            int row = 2;
+            foreach (var testCase in testSuite.TestSuite.AllTestCases)
+            {
+                var replacementSets = GetReplacementSets(testCase);
+                foreach (var replacements in replacementSets)
+                {
+                    var firstRow = row;
+                    foreach (var testAction in testCase.Actions)
+                    {
+                        AddSteps(sheet, testAction, replacements, ref row);
+                    }
+                    if (firstRow != row)
+                    {
+                        var mergedID = sheet.Cells[firstRow, 1, row - 1, 1];
+                        mergedID.Merge = true;
+                        mergedID.Value = testCase.WorkItem == null ? "" : testCase.WorkItem.Id.ToString();
+                        mergedID.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        mergedID.Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+
+                        var mergedText = sheet.Cells[firstRow, 2, row - 1, 2];
+                        mergedText.Merge = true;
+                        CleanupText(mergedText, testCase.Title, replacements);
+                        mergedText.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        mergedText.Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+                    }
+                }
+            }
+
+            var header = sheet.Cells[1, 1, 1, 8];
+            header.Style.Font.Bold = true;
+            header.Style.Fill.PatternType = ExcelFillStyle.Solid;
+            header.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 226, 238, 18));
+
+            sheet.Cells[1, 1, row, 8].Style.WrapText = true;
         }
 
         private List<Dictionary<string, string>> GetReplacementSets(ITestCase testCase)
