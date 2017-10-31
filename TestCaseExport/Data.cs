@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Threading;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.TestManagement.Client;
 using TestCaseExport.Annotations;
@@ -17,32 +14,13 @@ namespace TestCaseExport
 {
     public class Data : INotifyPropertyChanged
     {
-        private List<Task> _pendingTasks = new List<Task>();
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            var handler = PropertyChanged;
-            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public event EventHandler<bool> IsBusy;
-
-        protected virtual void OnIsBusy(bool e)
-        {
-            var handler = IsBusy;
-            if (handler != null) handler(this, e);
-        }
-
-        private ITestManagementTeamProject _selectedProject;
-        private BindingList<SelectableTestPlan> _testPlans = new BindingList<SelectableTestPlan>();
-        private SelectableTestPlan _selectedTestPlan;
-        private BindingList<SelectableTestSuite> _testSuites = new BindingList<SelectableTestSuite>();
-        private SelectableTestSuite _selectedTestSuite;
         private bool _allTestSuites;
         private string _exportFileName;
+        private readonly List<Task> _pendingTasks = new List<Task>();
+
+        private ITestManagementTeamProject _selectedProject;
+        private SelectableTestPlan _selectedTestPlan;
+        private SelectableTestSuite _selectedTestSuite;
 
         public ITestManagementTeamProject SelectedProject
         {
@@ -77,15 +55,9 @@ namespace TestCaseExport
             }
         }
 
-        public string SelectedProjectName
-        {
-            get { return _selectedProject == null ? "" : _selectedProject.TeamProjectName; }
-        }
+        public string SelectedProjectName => _selectedProject == null ? "" : _selectedProject.TeamProjectName;
 
-        public BindingList<SelectableTestPlan> TestPlans
-        {
-            get { return _testPlans; }
-        }
+        public BindingList<SelectableTestPlan> TestPlans { get; } = new BindingList<SelectableTestPlan>();
 
         public SelectableTestPlan SelectedTestPlan
         {
@@ -121,10 +93,7 @@ namespace TestCaseExport
             }
         }
 
-        public BindingList<SelectableTestSuite> TestSuites
-        {
-            get { return _testSuites; }
-        }
+        public BindingList<SelectableTestSuite> TestSuites { get; } = new BindingList<SelectableTestSuite>();
 
         public SelectableTestSuite SelectedTestSuite
         {
@@ -162,9 +131,23 @@ namespace TestCaseExport
             }
         }
 
-        public bool SuiteIsSelected
+        public bool SuiteIsSelected => null != _selectedTestSuite && !string.IsNullOrEmpty(ExportFileName);
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            get { return null != _selectedTestSuite && !string.IsNullOrEmpty(ExportFileName); }
+            var handler = PropertyChanged;
+            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public event EventHandler<bool> IsBusy;
+
+        protected virtual void OnIsBusy(bool e)
+        {
+            var handler = IsBusy;
+            if (handler != null) handler(this, e);
         }
 
         internal void SaveSettings(Settings settings)
@@ -185,7 +168,7 @@ namespace TestCaseExport
             var tfs = new TfsTeamProjectCollection(new Uri(settings.TfsUrl));
             SelectedProject = tfs.GetService<ITestManagementService>().GetTeamProject(settings.ProjectName);
 
-            while(_pendingTasks.Count > 0)
+            while (_pendingTasks.Count > 0)
                 Application.DoEvents();
 
             if (string.IsNullOrEmpty(settings.TestPlan))
@@ -206,30 +189,30 @@ namespace TestCaseExport
 
         public class SelectableTestPlan
         {
-            public ITestPlan TestPlan { get; private set; }
-            public string Name { get; private set; }
-            public string DisplayName { get; private set; }
-
             public SelectableTestPlan(ITestPlan testPlan)
             {
                 TestPlan = testPlan;
                 Name = testPlan.Name;
-                DisplayName = testPlan.Name + " (Id: " + testPlan.Id.ToString() + ")";
+                DisplayName = testPlan.Name + " (Id: " + testPlan.Id + ")";
             }
+
+            public ITestPlan TestPlan { get; }
+            public string Name { get; }
+            public string DisplayName { get; }
         }
 
         public class SelectableTestSuite
         {
-            public ITestSuiteBase TestSuite { get; private set; }
-            public string Title { get; private set; }
-            public string DisplayName { get; private set; }
-
             public SelectableTestSuite(ITestSuiteBase testSuite)
             {
                 TestSuite = testSuite;
                 Title = testSuite.Title;
-                DisplayName = testSuite.Title + " (Id: " + testSuite.Id.ToString() + ")";
+                DisplayName = testSuite.Title + " (Id: " + testSuite.Id + ")";
             }
+
+            public ITestSuiteBase TestSuite { get; }
+            public string Title { get; }
+            public string DisplayName { get; }
         }
     }
 }

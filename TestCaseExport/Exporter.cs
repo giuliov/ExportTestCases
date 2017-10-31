@@ -1,22 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.TeamFoundation.TestManagement.Client;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using System;
-using System.Windows.Forms;
 
 namespace TestCaseExport
 {
     /// <summary>
-    /// Exports a passed set of test cases to the supplied file.
+    ///     Exports a passed set of test cases to the supplied file.
     /// </summary>
     public class Exporter
     {
-
         public void Export(string filename, IEnumerable<Data.SelectableTestSuite> testSuites, bool individualFiles)
         {
             if (individualFiles)
@@ -29,7 +28,7 @@ namespace TestCaseExport
                             Path.ChangeExtension(
                                 Printable(testSuite.DisplayName),
                                 Path.GetExtension(filename)
-                        ));
+                            ));
                     var fi = new FileInfo(singleFilename);
                     using (var pkg = new ExcelPackage(fi))
                     {
@@ -66,10 +65,7 @@ namespace TestCaseExport
         private string Printable(string p)
         {
             foreach (var c in Path.GetInvalidFileNameChars())
-            {
                 p = p.Replace(c, '_');
-
-            }
             return p;
         }
 
@@ -107,7 +103,7 @@ namespace TestCaseExport
             sheet.Column(8).Width = 20;
 
 
-            int row = 2;
+            var row = 2;
             foreach (var testCase in testSuite.TestSuite.AllTestCases)
             {
                 var replacementSets = GetReplacementSets(testCase);
@@ -115,14 +111,12 @@ namespace TestCaseExport
                 {
                     var firstRow = row;
                     foreach (var testAction in testCase.Actions)
-                    {
                         AddSteps(sheet, testAction, replacements, ref row);
-                    }
                     if (firstRow != row)
                     {
                         var mergedID = sheet.Cells[firstRow, 1, row - 1, 1];
                         mergedID.Merge = true;
-                        mergedID.Value = testCase.WorkItem == null ? "" : testCase.WorkItem.Id.ToString();
+                        mergedID.Value = testCase.WorkItem?.Id.ToString() ?? "";
                         mergedID.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                         mergedID.Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
@@ -150,9 +144,7 @@ namespace TestCaseExport
             {
                 var replacement = new Dictionary<string, string>();
                 foreach (DataColumn c in testCase.DefaultTableReadOnly.Columns)
-                {
                     replacement[c.ColumnName] = r[c] as string;
-                }
                 replacementSets.Add(replacement);
             }
             return replacementSets.DefaultIfEmpty(new Dictionary<string, string>()).ToList();
@@ -171,17 +163,13 @@ namespace TestCaseExport
             else if (null != group)
             {
                 foreach (var action in group.Actions)
-                {
                     AddSteps(xlWorkSheet, action, replacements, ref row);
-                }
             }
             else if (null != sharedRef)
             {
                 var step = sharedRef.FindSharedStep();
                 foreach (var action in step.Actions)
-                {
                     AddSteps(xlWorkSheet, action, replacements, ref row);
-                }
             }
             row++;
         }
@@ -189,9 +177,7 @@ namespace TestCaseExport
         private void CleanupText(ExcelRangeBase cell, string input, Dictionary<string, string> replacements)
         {
             foreach (var kvp in replacements)
-            {
                 input = input.Replace("@" + kvp.Key, kvp.Value);
-            }
 
             new HtmlToRichTextHelper().HtmlToRichText(cell, input);
         }
